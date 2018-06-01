@@ -23,16 +23,10 @@ torch.backends.cudnn.benchmark=True
 parser = argparse.ArgumentParser(description='Fast Tacotron implementation')
 parser.add_argument('-exp', '--exp_name', type=str, default='00', metavar='STR',
                     help='Generated samples will be located in the checkpoints/exp<exp_name> directory. Default="00"') # 
-parser.add_argument('-e', '--max_epoch', type=int, default=1000, metavar='N',
-                    help='Max epoch, Default=1000') 
-parser.add_argument('-btr', '--batch_train', type=int, default=16, metavar='N',
-                    help='Batch size for training. e.g. -btr 16')
 parser.add_argument('-bts', '--batch_test', type=int, default=1, metavar='N',
                     help='Batch size for test. e.g. -bts 1')
 parser.add_argument('-load', '--load', type=str, default=None, metavar='STR',
                     help='e.g. --load checkpoints/<expname>/checkpoint_00')
-parser.add_argument('-sint', '--save_interval', type=int, default=50, metavar='N',
-                    help='Save interval., default=50')
 parser.add_argument('-disp', '--sel_display', type=int, default=9, metavar='N',
                     help='Selection of data for display., default=9')
 #parser.add_argument('-g', '--gpu_id', type=str, default=None, metavar='STR',
@@ -102,7 +96,7 @@ def load_checkpoint(filepath):
     optimizer.load_state_dict(dt['optimizer'])
     return dt['epoch']
 
-def save_checkpoint(state):
+def save_checkpoint(state, exp_name):
     filepath = CHECKPOINT_DIR + '/checkpoint{}.pth.tar'.format(state['epoch'])
     torch.save(state, filepath)
     
@@ -216,11 +210,10 @@ for epoch in range(last_epoch, args.max_epoch):
     print(df_hist.loc[epoch])
     df_hist.to_csv(CHECKPOINT_DIR + '/hist.csv', index=False)
     
-    # Save model parameters & argparser configurations.
     if (epoch % args.save_interval) is 0:
         save_checkpoint({'epoch': epoch,
                          'state_dict': model.state_dict(),
-                         'optimizer': optimizer.state_dict(),} )
+                         'optimizer': optimizer.state_dict(),}, args.exp_name)
         
         if args.generate is not None:
             
