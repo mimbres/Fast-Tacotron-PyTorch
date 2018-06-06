@@ -1,0 +1,12 @@
+{
+"exp_name": "00",
+"max_epoch": 1000,
+"batch_train": 16,
+"batch_test": 1,
+"load": null,
+"save_interval": 50,
+"sel_display": 9,
+"batch_norm": false,
+"slience_state_guide": false,
+"generate": null
+}

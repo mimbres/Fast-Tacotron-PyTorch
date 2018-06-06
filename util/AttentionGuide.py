@@ -49,12 +49,17 @@ class AttentionGuideGen():
             _new_guide_sz = [target_sz[0]-pad_sz[i,0], target_sz[1]-pad_sz[i,1]]
             _new_guide = resize(self.base_guide, _new_guide_sz, mode='constant').astype(np.float32)
             
-            W[i, pad_sz[i,0]:, pad_sz[i,1]:] = _new_guide
-            W[i, :pad_sz[i,0], pad_sz[i,1]-1] = 0.
+#            W[i, pad_sz[i,0]:, pad_sz[i,1]:] = _new_guide
+            W[i, 1:target_sz[0]-pad_sz[i,0]+1, 1:target_sz[1]-pad_sz[i,1]+1] = _new_guide # right pad
+#            W[i, :pad_sz[i,0], pad_sz[i,1]-1] = 0.
+            W[i, 0, 0] = 0.
+            W[i, target_sz[0]-pad_sz[i,0]+1:, target_sz[1]-pad_sz[i,1]+1:] = 0.  # Need to try W[i, target_sz[0]+1:, target_sz[1]+1:] 
         
             if set_silence_state is not -1:
-                W[i, pad_sz[i,0]:, pad_sz[i,1]-1] = set_silence_state
-                
+                #W[i, pad_sz[i,0]:, pad_sz[i,1]-1] = set_silence_state
+                W[i, 1:target_sz[0]-pad_sz[i,0], 0] = set_silence_state
+                W[i, target_sz[0]-pad_sz[i,0]+1:, target_sz[1]-pad_sz[i,1]+1:] = 1.
+                W[i, target_sz[0]-pad_sz[i,0]+1:, 0] = 0.    
         return W
     
 #    def get_padded_guide(self, target_sz=(10,15), pad_sz=np.asarray([3,5]), set_silence_state=-1):

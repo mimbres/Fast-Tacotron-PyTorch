@@ -9,7 +9,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from utils.AttentionGuide import AttentionGuideGen
+#from util.AttentionGuide import AttentionGuideGen
 
 
 # Highway Layer & Block:  
@@ -193,7 +193,7 @@ class Text2Mel(nn.Module):
         
         return None
     
-    def forward(self, x_text, x_melspec):
+    def forward(self, x_text, x_melspec, forced_att=None):
         
         # K,V: encoded text.  Q: encoded audio
         K, V = self.text_enc(x_text)     # Key, Value: Bx256xN with N=nth text 
@@ -202,6 +202,22 @@ class Text2Mel(nn.Module):
         # Attention: 
         K_T = K.permute(0,2,1)        # K, transposed as BxTx256
         A = F.softmax(torch.matmul(K_T, Q) / np.sqrt(self.d_dim), dim=1) # softmax along with Text length dimension, resulting BxNxT
+        
+        # Forced attention (for generation stage):
+        if forced_att is True:
+            A[0,:,0] = 0. ; A[0,0,0] = 1.
+            if A.shape[2] > 1:
+                current_pos = int(torch.argmax(A[0,:,-1]))
+                prev_pos    = int(torch.argmax(A[0,:,-2]))
+                print(prev_pos, current_pos)
+                if (-1 <= (current_pos - prev_pos)) &  ((current_pos - prev_pos) <= 3) is False:
+                    print(current_pos-prev_pos)
+                    A[0,:,-1] = 0.
+                    is_same_char = (float(x_text[0, current_pos]) == float(x_text[0, prev_pos])) 
+                    if is_same_char:
+                        A[0, prev_pos + 2, -1] = 1.
+                    else:
+                        A[0, prev_pos + 1, -1] = 1.
         
         # Attentional seed to audio_decoder, RQ = Att(K,V,Q)
         R = torch.matmul(V, A)        # Bx256xT with T=T_audio

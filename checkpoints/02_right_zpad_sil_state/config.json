@@ -1,0 +1,12 @@
+{
+"exp_name": "02_right_zpad_sil_state",
+"max_epoch": 1000,
+"batch_train": 32,
+"batch_test": 5,
+"load": null,
+"save_interval": 50,
+"sel_display": 9,
+"batch_norm": false,
+"silence_state_guide": 0.5,
+"generate": null
+}

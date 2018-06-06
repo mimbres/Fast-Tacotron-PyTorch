@@ -22,9 +22,9 @@ X_MELSPEC_MAX = 0.04071
 OMIT_DATA_ROWS =[945, 1119, 1149, 1371, 1853, 1929, 1939, 2965, 3405, 4246, 4670,
                   4684, 4699, 4706, 4713, 5163, 5164, 5165, 5166, 5167, 5169, 5172,
                    5174, 5182, 5185, 5532, 5935, 5964, 5974, 6039] # Reduce sentences with foreign characters.
-MAX_LEN_TEXT           = 250+1 # Max-lengths are required for z-padding
-MAX_LEN_MELSPEC        = 217+1
-MAX_LEN_SPEC           = 868+4
+MAX_LEN_TEXT           = 250+2 # Max-lengths are required for z-padding
+MAX_LEN_MELSPEC        = 217+2
+MAX_LEN_SPEC           = 868+8
 #MAX_LEN_PAIRED_TEXT    = 360
 #MAX_LEN_PAIRED_MELSPEC = 291# Max-lengths are required for z-padding
 #MAX_LEN_PAIRED_SPEC    = 1164
@@ -190,12 +190,14 @@ class LJSpeechDataset(Dataset):
         if len(x.shape) is 1:
             # 1D input:
             n_zeros = target_length - len(x)
-            x = np.pad(x, (n_zeros,0), 'constant', constant_values=(0,0))
+            #x = np.pad(x, (n_zeros,0), 'constant', constant_values=(0,0))
+            x = np.pad(x, (1,n_zeros-1), 'constant', constant_values=(0,0))  # letf 1 + right (all-1)-zpading!
         else:
             # 2D input: D x T
             n_zeros = target_length - x.shape[1]
             xz = np.zeros((x.shape[0], x.shape[1]+n_zeros))
-            xz[:, n_zeros:] = x
+            #xz[:, n_zeros:] = x
+            xz[:, 1:(xz.shape[1] - n_zeros + 1)] = x # right-zpading!!
             x = xz
         return x, n_zeros
             
