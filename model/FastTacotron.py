@@ -143,8 +143,8 @@ class AudioDec(nn.Module):
         x = F.relu(self.conv1x1_1(x))
         x = F.relu(self.conv1x1_2(x))
         x = F.relu(self.conv1x1_3(x))
-        return F.sigmoid(self.conv1x1_4(x))
-    
+        #return F.sigmoid(self.conv1x1_4(x))
+        return self.conv1x1_4(x) # We exclude sigmoid here. Instead, we use BCE with sigmoid loss to resolve numerical stability issue!
 
 
 # SSRN:
@@ -175,8 +175,8 @@ class SSRN(nn.Module):
         return None
         
     def forward(self, x):
-        return F.sigmoid(self.ssrn_layers(x))
-        
+        #return F.sigmoid(self.ssrn_layers(x))
+        return self.ssrn_layers(x)  # We exclude sigmoid. 
         
     
 #%% Text2Mel:
