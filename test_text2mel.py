@@ -16,6 +16,7 @@ Args:
 
 """
 import os, sys, shutil, pprint, argparse
+import string
 import numpy as np
 import torch
 import torch.nn as nn
@@ -24,6 +25,8 @@ from torch.autograd import Variable
 from live_dataloader import LJSpeechDataset
 from util.save_load_config import save_config, load_config
 from tqdm import tqdm
+
+DATA_ROOT = '/mnt/ssd3/data/LJSpeech-1.1'
 
 
 # Argv input parser:
@@ -111,6 +114,8 @@ if isinstance(text_input, str): # case: ex) "Hello"
 
 elif isinstance(text_input, int) | isinstance(text_input, list) | (text_input is None):
     text_sel = text_input
+    
+    dset_test  = LJSpeechDataset(data_root_dir=DATA_ROOT, train_mode=False, output_mode='melspec')
     test_loader = DataLoader(dset_test,
                           batch_size=args.batch_test,
                           shuffle=False,
@@ -148,4 +153,4 @@ else:
 
 
 
-if isinstance(text_input, int) | isinstance(text_input, list): # case: ex) 1 or [0,3,100]
+#if isinstance(text_input, int) | isinstance(text_input, list): # case: ex) 1 or [0,3,100]
