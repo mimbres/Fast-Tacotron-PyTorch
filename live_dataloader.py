@@ -84,13 +84,14 @@ class LJSpeechDataset(Dataset):
         mode = ['melspec'] : return index, text, melspec
         mode = ['SSRN']    : return index, spec, melspec
     '''
-    def __init__(self, data_root_dir=DATA_ROOT, train_mode=False , output_mode='melspec', transform=None):
+    def __init__(self, data_root_dir=DATA_ROOT, train_mode=False , output_mode='melspec', transform=None, data_sel=None):
         
         
         self.wav_root_dir = data_root_dir + '/wavs/'
         self.train_mode  = train_mode
         self.output_mode = output_mode
         self.transform   = transform
+        self.data_sel = data_sel
         
         self.max_len_text    = MAX_LEN_TEXT
         self.max_len_melspec = MAX_LEN_MELSPEC 
@@ -114,11 +115,16 @@ class LJSpeechDataset(Dataset):
 
         if self.train_mode is True:
             self.file_ids = df.iloc[0:N_TRAIN, 0] # file_ids: LJ**-**** (13,000)
-            self.texts    = df.iloc[0:N_TRAIN, 1] 
+            self.texts    = df.iloc[0:N_TRAIN, 1]
+            if self.data_sel is not None:
+                self.file_ids = self.file_ids[self.data_sel].reset_index(drop=True)
+                self.texts    = self.texts[self.data_sel].reset_index(drop=True)
         else:
             self.file_ids = df.iloc[N_TRAIN:, 0].reset_index(drop=True) # (100)
             self.texts    = df.iloc[N_TRAIN:, 1].reset_index(drop=True)       
-        
+            if self.data_sel is not None:
+                self.file_ids = self.file_ids[self.data_sel].reset_index(drop=True)
+                self.texts    = self.texts[self.data_sel].reset_index(drop=True)            
         
         # Prepraing Audio:
         if self.train_mode is True:

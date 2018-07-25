@@ -105,9 +105,9 @@ if isinstance(text_input, str): # case: ex) "Hello"
     # Convert input string into one-hot vectors
     x_text = chr2int(text_input)
     if USE_GPU:
-        x_text = Variable(x_text.cuda().long())
+        x_text = Variable(x_text.cuda().long(), requires_grad=False)
     else:
-        x_text = Variable(x_text.long())
+        x_text = Variable(x_text.long(), requires_grad=False)
 
     out_melspec = generate_text2mel(model=model, x_text=x_text, args=args, max_output_len=max_output_length)
 
@@ -115,13 +115,27 @@ if isinstance(text_input, str): # case: ex) "Hello"
 elif isinstance(text_input, int) | isinstance(text_input, list) | (text_input is None):
     text_sel = text_input
     
-    dset_test  = LJSpeechDataset(data_root_dir=DATA_ROOT, train_mode=False, output_mode='melspec')
+    dset_test  = LJSpeechDataset(data_root_dir=DATA_ROOT, train_mode=False, output_mode='melspec', data_sel=text_sel)
     test_loader = DataLoader(dset_test,
-                          batch_size=args.batch_test,
+                          batch_size=1,
                           shuffle=False,
                           num_workers=6,
                           pin_memory=True,
                          )
+    
+    
+    for batch_idx, (data_idx, x_text , x_melspec, zs) in tqdm(enumerate(test_loader)):
+        if USE_GPU:
+            x_text, x_melspec = Variable(x_text.cuda().long(), requires_grad=False), Variable(x_melspec.cuda().float(), requires_grad=False)
+        else:
+            x_text, x_melspec = Variable(x_text.long(), requires_grad=False), Variable(x_melspec.float(), requires_grad=False)
+        
+        
+        #n_batch = len(test_loader) # number of iteration for one epoch.
+        out_melspec = generate_text2mel(model=model, x_text=x_text, args=args, max_output_len=max_output_length)
+        
+        # Save to file
+        
 
 else:
     print('Error: text_input must be STR or int or list!')
