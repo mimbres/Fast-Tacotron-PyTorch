@@ -69,7 +69,8 @@ else:
 def generate_text2mel(model=nn.Module,
                       x_text=torch.autograd.Variable,
                       args=argparse.Namespace,
-                      max_output_len=int):
+                      max_output_len=int,
+                      save_to_file=True):
 
     model.eval()
     torch.set_grad_enabled(False) # Pytorch 0.4: "volatile=True" is deprecated.
@@ -83,9 +84,20 @@ def generate_text2mel(model=nn.Module,
         if i>10:
             if (torch.sum(out_y[0,:,-5:]) < 1e-08):
                 break
-
+    
+    if save_to_file is True:
+        save
+        
+    
     return _melspec
 
+
+def save_melspec(out_filepath, melspec):
+    np.save(out_filepath, melspec)
+    
+
+def save_melspec_img(out_filepath, melspec):
+    
 
 def chr2int(text):
     # 'City$,' ==> ['c','i','t','y',','] ==> [7,13,24,29,2]
