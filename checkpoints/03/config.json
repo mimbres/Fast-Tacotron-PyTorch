@@ -1,5 +1,5 @@
 {
-"exp_name": "00",
+"exp_name": "03",
 "model_type": "base",
 "data_root": "/home/mimbres/Documents/Dataset/LJSpeech-1.1",
 "max_epoch": 1000,

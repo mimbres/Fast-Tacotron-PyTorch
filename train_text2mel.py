@@ -45,11 +45,14 @@ else:
             args = load_config(config_fpath)
             args.exp_name = argv_inputs[1].lower()
             save_config(args, config_fpath)
+        else:
+            args = load_config(config_fpath)
     else:
         args = load_config(config_fpath)
 
+
 # Model type selection:
-if args.model_type is 'base':
+if args.model_type == 'base':
     from model.FastTacotron import Text2Mel
 elif args.model_type is 'BN':
     from model.FastTacotron_BN import Text2Mel
@@ -118,7 +121,7 @@ def save_checkpoint(state):
     save_config(args, CHECKPOINT_DIR + '/config.json')
     
 #%% Data Loading
-DATA_ROOT = '/mnt/ssd3/data/LJSpeech-1.1'
+DATA_ROOT = args.data_root#'/mnt/ssd2/data/LJSpeech-1.1'
 
 dset_train = LJSpeechDataset(data_root_dir=DATA_ROOT, train_mode=True,  output_mode='melspec')
 dset_test  = LJSpeechDataset(data_root_dir=DATA_ROOT, train_mode=False, output_mode='melspec')
@@ -171,9 +174,9 @@ def train(epoch):
 #            break
         
         optimizer.zero_grad()
-        out_y, out_att = model(x_text, x_melspec)
+        out_y, out_y_sig, out_att = model(x_text, x_melspec)
         
-        l1 = loss_L1(F.sigmoid(out_y[:,:,:-1]), x_melspec[:,:,1:]) 
+        l1 = loss_L1(out_y_sig[:,:,:-1], x_melspec[:,:,1:]) 
         l2 = loss_BCE(out_y[:,:,:-1], x_melspec[:,:,1:])
         
         # l3: Attention loss, W is guide matrices with BxNxT        
@@ -201,74 +204,74 @@ def train(epoch):
         if ((epoch in [1,3,5,10,20,30,40]) | (epoch%args.save_interval is 0)) & (select_data in data_idx ):
             sel = np.where(data_idx.cpu()==select_data)[0].data[0]
             
-            out_y_cpu = (out_y[sel,:,:]).data.cpu().numpy()
+            out_y_sig_cpu = (out_y_sig[sel,:,:]).data.cpu().numpy()
             out_att_cpu = (out_att[sel,:,:]).data.cpu().numpy()
             #org_text  = (x_text[sel,:]).data.cpu().numpy()
             org_melspec =(x_melspec[sel,:,:]).data.cpu().numpy()
             
-            display_spec(out_y_cpu, org_melspec, 'Sample {}: epoch = {}'.format(select_data, epoch))
+            display_spec(out_y_sig_cpu, org_melspec, 'Sample {}: epoch = {}'.format(select_data, epoch))
             display_att(out_att_cpu, W[sel,:,:], 'Sample {}: epoch = {}'.format(select_data, epoch))
         
     return train_loss
 
-def generate_text2mel(model_load=None, new_text=None):
-    '''
-    Args:
-    - text: <str> or <list index(in test data) to display>. ex) 'Hello' or [0, 3, 5]
-    - model_load: <existing model to load> or <exp_name>. exp_name must have a directory of checkpoint containing config.json        
-    '''
-    
-    if isinstance(model_load, str):
-        import os, shutil, pprint #, argparse
-        import numpy as np
-        import torch
-        import torch.nn as nn
-        from torch.utils.data import DataLoader
-        from torch.autograd import Variable
-        from live_dataloader import LJSpeechDataset
-        from util.save_load_config import save_config, load_config
-        from model.FastTacotron import Text2Mel
-        
-        
-        
-        
-        
-    
-    
-        
-        
-        
-    model.eval()
-    torch.set_grad_enabled(False) # Pytorch 0.4: "volatile=True" is deprecated. 
-    
-    for batch_idx, (data_idx, x_text , x_melspec_org, zs) in tqdm(enumerate(test_loader)):
-        if USE_GPU:
-            x_text, x_melspec_org = Variable(x_text.cuda().long(), requires_grad=False), Variable(x_melspec_org.cuda().float(), requires_grad=False)
-        else:
-            x_text, x_melspec_org = Variable(x_text.long(), requires_grad=False), Variable(x_melspec_org.float(), requires_grad=False)
-        if batch_idx is disp_sel:
-            break
-        
-        x_melspec = Variable(torch.FloatTensor(1,80,1).cuda()*0, requires_grad=False)
-        
-        import matplotlib.pyplot as plt
-     
-        for i in range(220):  
-            out_y, out_att = model(x_text[:,:], x_melspec)
-            x_melspec = torch.cat((x_melspec, out_y[:,:,-1].view(1,80,-1)), dim=2)
-            #plt.imshow(out_att[0,:,:].data.cpu().numpy())
-            #plt.show()
-            
-   
-    plt.imshow(x_melspec[0,:,:].data.cpu().numpy())
-    plt.show()
-    
-    plt.imshow(x_melspec_org[0,:,:].data.cpu().numpy())
-    plt.show()
-    
-    plt.imshow(out_att[0,:,:].data.cpu().numpy())
-    plt.show()
-    
+#def generate_text2mel(model_load=None, new_text=None):
+#    '''
+#    Args:
+#    - text: <str> or <list index(in test data) to display>. ex) 'Hello' or [0, 3, 5]
+#    - model_load: <existing model to load> or <exp_name>. exp_name must have a directory of checkpoint containing config.json        
+#    '''
+#    
+#    if isinstance(model_load, str):
+#        import os, shutil, pprint #, argparse
+#        import numpy as np
+#        import torch
+#        import torch.nn as nn
+#        from torch.utils.data import DataLoader
+#        from torch.autograd import Variable
+#        from live_dataloader import LJSpeechDataset
+#        from util.save_load_config import save_config, load_config
+#        from model.FastTacotron import Text2Mel
+#        
+#        
+#        
+#        
+#        
+#    
+#    
+#        
+#        
+#        
+#    model.eval()
+#    torch.set_grad_enabled(False) # Pytorch 0.4: "volatile=True" is deprecated. 
+#    
+#    for batch_idx, (data_idx, x_text , x_melspec_org, zs) in tqdm(enumerate(test_loader)):
+#        if USE_GPU:
+#            x_text, x_melspec_org = Variable(x_text.cuda().long(), requires_grad=False), Variable(x_melspec_org.cuda().float(), requires_grad=False)
+#        else:
+#            x_text, x_melspec_org = Variable(x_text.long(), requires_grad=False), Variable(x_melspec_org.float(), requires_grad=False)
+#        if batch_idx is disp_sel:
+#            break
+#        
+#        x_melspec = Variable(torch.FloatTensor(1,80,1).cuda()*0, requires_grad=False)
+#        
+#        import matplotlib.pyplot as plt
+#     
+#        for i in range(220):  
+#            out_y, out_att = model(x_text[:,:], x_melspec)
+#            x_melspec = torch.cat((x_melspec, out_y[:,:,-1].view(1,80,-1)), dim=2)
+#            #plt.imshow(out_att[0,:,:].data.cpu().numpy())
+#            #plt.show()
+#            
+#   
+#    plt.imshow(x_melspec[0,:,:].data.cpu().numpy())
+#    plt.show()
+#    
+#    plt.imshow(x_melspec_org[0,:,:].data.cpu().numpy())
+#    plt.show()
+#    
+#    plt.imshow(out_att[0,:,:].data.cpu().numpy())
+#    plt.show()
+#    
     
 #%% Train Main Loop
 df_hist = pd.DataFrame(columns=('Total', 'L1', 'BCE','Att'))

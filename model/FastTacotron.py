@@ -225,9 +225,10 @@ class Text2Mel(nn.Module):
         
         # Decoding Mel-spectrogram, Y
         Y = self.audio_dec(RQ)        # Bx80xT with T=T_audio
+        Y_sig = F.sigmoid(Y)
         
         if self.optional_output is True:
-            return Y, A, K, V, Q
+            return Y, Y_sig, A, K, V, Q
         else:
-            return Y, A
+            return Y, Y_sig, A
     

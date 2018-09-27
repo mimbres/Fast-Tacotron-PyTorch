@@ -15,7 +15,7 @@ import librosa
 from torch.utils.data.dataset import Dataset
 from nnmnkwii.datasets import FileDataSource, FileSourceDataset, MemoryCacheDataset
 
-DATA_ROOT = '/mnt/ssd3/data/LJSpeech-1.1'
+#DATA_ROOT = '/mnt/ssd2/data/LJSpeech-1.1'
 N_TRAIN = 13000 # N_TEST = 100 (13000~13099) 
 X_SPEC_MAX = 193.99077 # Required for feature normalization
 X_MELSPEC_MAX = 0.04071
@@ -84,7 +84,7 @@ class LJSpeechDataset(Dataset):
         mode = ['melspec'] : return index, text, melspec
         mode = ['SSRN']    : return index, spec, melspec
     '''
-    def __init__(self, data_root_dir=DATA_ROOT, train_mode=False , output_mode='melspec', transform=None, data_sel=None):
+    def __init__(self, data_root_dir=None, train_mode=False , output_mode='melspec', transform=None, data_sel=None):
         
         
         self.wav_root_dir = data_root_dir + '/wavs/'
